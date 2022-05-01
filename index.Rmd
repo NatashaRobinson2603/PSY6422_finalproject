@@ -1,0 +1,119 @@
+---
+title: "index"
+author: '210155291'
+date: "01/05/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(RColorBrewer)
+```
+
+# Module PSY6422
+## A stacked bar plot showing likert scale responses to imagined traumatic scenarios
+
+# Origins:
+PTSD and trauma are widely researched within pyschology. Investigating responses to stimuli and the emotions they elicit is important for undertsnading PTSD further and developing more effective treatment methods. The following data is take from "Psychological Response Data on the Traumatic Nature of 600 Written Events"(Jones, Bellet, Levari, McNally, 2021).A survey of 250 participants responses to 600 written descriptions of potentially traumatic scenarios.
+
+# Research Questions 
+My plot will visualise the relationship between trauma stimuli and trauma ratings. Attempting to identify certain stimuli as more traumatic. This could build onto future research which identifies why phrasing of stimuli could lead these to be percieved as more traumatic than simular traumatic stimuli.
+
+```{r data import and view}
+### read and show first lines of original dataset
+setwd("C:/Users/njrob/Desktop/Masters/Data-analysis + visualisations/finalproject/Repositry/PSY6422_assignment1")
+original_dataset <- read_csv(here("data", "raw", "originaldataset.csv"))
+#head(original_dataset)  # the first 7 lines of data
+head(original_dataset, n =5)
+```
+
+```{r remove outliers}
+#Partipants 137 and 146 are removed because they show consistently high responses among all scenarios indicating them as outliers
+df1 <- original_dataset[-c(137, 146)] 
+```
+
+```{r removing columns}
+#removing questions and demographic data - focusing on scenarios where a traumatic event is witnessed. 
+df2 <- df1 [c(5,9, 17, 22, 29, 43, 46, 84)]
+```
+
+```{r remove rows which contain NA responses}
+df3 <- na.omit(df2, cols=c("5","9","17","22","29","43", "46", "84"))
+head(df3)
+```
+
+```{r rename columns}
+colnames(df3) <- c("Q_1", "Q_2", "Q_3", "Q_3", "Q_4", "Q_5", "Q_6", "Q_7", "Q_8")
+new <- c("Extremely Traumatic", "Traumatic", "Somewhat Traumatic", "Neutral", "Somewhat Not Traumatic", "Mostly Not Traumatic", "Not At All Traumatic")
+```
+
+```{r calculate how often responses occur}
+table(df3$Q_1)
+table(df3$Q_2)
+table(df3$Q_3)
+table(df3$Q_4)
+table(df3$Q_5)
+table(df3$Q_6)
+table(df3$Q_7)
+```
+
+```{r create a frequency table}
+mytab <- data.frame( Response = c("Extremely Traumatic", "Traumatic", "Somewhat Traumatic", "Neutral", "Somewhat Not Traumatic", "Mostly Not Traumatic", "Not At All Traumatic"),
+                     Q_1 = c(27,10,5,3,0,0,0),
+                     Q_2 = c(5,4,2,11,11,3,9),
+                     Q_3 = c(2,5,10,9,4,13,2),
+                     Q_4 = c(34,6,3,1,0,1,0),
+                     Q_5 = c(23,14,6,1,0,1,0),
+                     Q_6 = c(8,3,3,6,7,15,3),
+                     Q_7 = c(15,11,14,2,2,1,0))
+view(mytab)
+```
+
+
+```{r}
+data2 <- mytab %>% gather(key = Q_, value = Value, Q_1:Q_7)
+view(data2)
+```
+
+
+
+```{r}
+#Creating plot
+p <- ggplot(data2, aes(Value, Q_, fill = factor(Response, levels = c("Extremely Traumatic", "Traumatic","Somewhat Traumatic", "Neutral", "Somewhat Not Traumatic", "Mostly Not Traumatic", "Not At All Traumatic")))) + geom_col(position="stack") + 
+  labs(title = "A stacked bar plot showing participants ratings of 7 traumatic scenarios",
+       subtitle = "Scale Not Traumatic to Traumatic",
+         y = "Scenario", x = "Number of Participants", fill = "Response") +
+  scale_y_discrete(labels = c("Witnessed a stranger being raped",
+                              "Watched a consensual pornographic film involving violence",
+                              "Witnessed a friend have a panic attack",
+                              "Witnessed maimed human corpes while working in a refugee camp", 
+                              "Witnessed a friend being beaten to death", 
+                              "Witnessed father beat mother until bloody",
+                              "Watched a stranger being raped")) +
+   scale_fill_brewer(palette = "BuGn") +
+  theme(text = element_text(size = 7))
+p
+```
+```{r save plot}
+ggsave(here("figs", "myplot.png"))
+```
+
+# Summary:
+# What I have learnt:
+-	I learnt what a stacked bar plot is and how to work with Likert data in r. 
+-	I learnt what github is and how to publish documents online. 
+-	I learnt how to remove outliers and NA responses.
+-	How to change label sizes and form a variety of plots using ggplot.
+-	I learnt what a codebook is and how to create one using r.
+-	I generally improved my researching skills in terms of encountering an error and looking at multiple sources to figure out how to overcome these errors in different ways.
+
+# What I would do next time:
+-	Initially when I found the data set I wanted to create a similar plot but with two bars for each question which would divide participants into two groups: those who had a previously experienced trauma and those who had not. I wanted to see whether people who had previously experienced trauma rated imagined traumatic scenarios as more traumatic than people who hadn’t experienced trauma. Unfortunately, I tried to draw several plots to see how this would look before trying to code it, but I couldn’t figure out how to format it in a way that the data was easily readable. Further research would benefit from looking at the relationship between previous trauma and ratings of traumatic scenarios.
+-	I had to calculate the frequency of each Likert response separately in code and then create a table myself from these calculations. I think there is likely a much easier way to do this in r but when I looked it up, I didn’t know how to add in additional columns for the response types and then change the data to just reflect the frequency of responses. 
+-	Finally, I wanted to add percentage values to the bar plot, i.e. for each response on the bar there would be percentage of participants who gave that response. I think if I changed my frequencies to percentages this may have worked but I was conscious of time and felt it may have made my plot look over complicated and harder to interpret.
+
